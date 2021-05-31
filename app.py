@@ -112,7 +112,7 @@ def login():
 @app.route('/logout')
 def logout():
     """Handle logout of user."""
-    session.pop(CURR_USER_KEY)
+    do_logout()
     return redirect('/')
     # IMPLEMENT THIS
 
@@ -211,7 +211,7 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
-
+    
     # IMPLEMENT THIS
 
 
