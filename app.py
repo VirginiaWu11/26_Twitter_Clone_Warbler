@@ -349,3 +349,11 @@ def add_header(req):
     req.headers["Expires"] = "0"
     req.headers['Cache-Control'] = 'public, max-age=0'
     return req
+
+
+##############################################################################
+# Part 1 Step Seven: Research and Understand Login Strategy
+# How is the logged in user being kept track of? the do_login function adds the user's id into the session which is then used to get the user data with a query; and then stored in the g.user object. Within each route that requires a user to be logged in, there is a condition to check whether g.user is true or false, thus authorizing page view accordingly.
+# What is Flask’s g object? The g name stands for “global”, but that is referring to the data being global within a context.
+# What is the purpose of add_user_to_g? This function adds the current user to Flask global if the user is logged in. This lets us use the g.user oject within all our routes
+# What does @app.before_request mean? Register a function to run before each request.
