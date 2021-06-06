@@ -263,9 +263,14 @@ def add_like(msg_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    new_like = Likes(user_id=g.user.id, message_id=msg_id)
-    db.session.add(new_like)
-    db.session.commit()
+    if msg_id not in [msg.id for msg in g.user.likes]:
+        new_like = Likes(user_id=g.user.id, message_id=msg_id)
+        db.session.add(new_like)
+        db.session.commit()
+    else:
+        like = Likes.query.filter_by(user_id=g.user.id, message_id=msg_id).first()
+        db.session.delete(like)
+        db.session.commit()
 
     return redirect("/")
 
