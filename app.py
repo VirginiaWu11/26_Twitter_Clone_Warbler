@@ -269,6 +269,28 @@ def add_like(msg_id):
 
     return redirect("/")
 
+@app.route('/users/<int:user_id>/likes')
+def show_likes(user_id):
+    """Add like"""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+
+
+    messages = (Message
+                .query
+                .filter(Message.id.in_([msg.id for msg in user.likes]))
+                .order_by(Message.timestamp.desc())
+                .limit(100)
+                .all())
+   
+    likes = [msg.id for msg in g.user.likes]
+
+    return render_template('/users/likes.html',user=user,messages=messages, likes=likes)
+
 
 ##############################################################################
 # Messages routes:
