@@ -2,7 +2,8 @@
 
 # run these tests like:
 #
-#    python -m unittest test_user_model.py
+#   FLASK_ENV=production python -m unittest test_user_model.py
+# (we set FLASK_ENV for this command, so it doesn’t use debug mode, and therefore won’t use the Debug Toolbar during our tests).
 
 
 import os
@@ -26,7 +27,6 @@ from app import app
 # once for all tests --- in each test, we'll delete the data
 # and create fresh new clean test data
 
-db.create_all()
 
 
 class UserModelTestCase(TestCase):
@@ -34,7 +34,8 @@ class UserModelTestCase(TestCase):
 
     def setUp(self):
         """Create test client, add sample data."""
-
+        db.drop_all()
+        db.create_all()
         User.query.delete()
         Message.query.delete()
         Follows.query.delete()
@@ -56,3 +57,7 @@ class UserModelTestCase(TestCase):
         # User should have no messages & no followers
         self.assertEqual(len(u.messages), 0)
         self.assertEqual(len(u.followers), 0)
+        # test repr method
+        self.assertEqual(str(u), "<User #1: testuser, test@test.com>")
+
+   
