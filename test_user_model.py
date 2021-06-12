@@ -47,6 +47,7 @@ class UserModelTestCase(TestCase):
             username="testuser1",
             password="HASHED_PASSWORD"
         )
+        
         u2 = User(
             email="test2@test.com",
             username="testuser2",
@@ -56,8 +57,11 @@ class UserModelTestCase(TestCase):
         db.session.add_all([u1,u2])
         db.session.commit()
 
+        u4=User.signup("testuser3","test3@test.com","HASHED_PASSWORD3",None)
+        db.session.commit()
         
         self.u1 = User.query.get(1)
+        self.u1_id=self.u1.id
         self.u2= User.query.get(2)
         self.client = app.test_client()
         # import pdb; pdb.set_trace()
@@ -84,7 +88,10 @@ class UserModelTestCase(TestCase):
         self.assertEqual(len(u.messages), 0)
         self.assertEqual(len(u.followers), 0)
         # test repr method
-        self.assertEqual(str(u), "<User #3: testuser, test@test.com>")
+        self.assertEqual(str(u), "<User #4: testuser, test@test.com>")
+
+
+######## Following tests 
 
     def test_is_following(self):
         """Test user function is_following"""
@@ -97,13 +104,16 @@ class UserModelTestCase(TestCase):
         self.assertEqual(self.u2.is_followed_by(self.u1),True)
         self.assertEqual(self.u1.is_followed_by(self.u2),False)
 
+######## SignUp tests 
+
+
     def test_valid_user_signup(self):
         """Test user method signup"""
         u4=User.signup("testuser4","test4@test.com","HASHED_PASSWORD4",None)
         db.session.commit()
         u4 = User.query.get(u4.id)
         self.assertIsNotNone(u4)
-        self.assertEqual(u4.id,3)
+        self.assertEqual(u4.id,4)
         self.assertEqual(u4.username,"testuser4")
         
         self.assertNotEqual(u4.password,"HASHED_PASSWORD4")
@@ -124,3 +134,15 @@ class UserModelTestCase(TestCase):
         
         with self.assertRaises(ValueError) as context:
             User.signup("testuser5", "test5@test.com", None, None)
+
+######## Authentication tests 
+
+    def test_valid_authentication(self):
+        u = User.authenticate('testuser3', "HASHED_PASSWORD3")
+        self.assertIsNotNone(u)
+        
+    def test_invalid_username(self):
+        self.assertFalse(User.authenticate("testuser5", "HASHED_PASSWORD"))
+
+    def test_wrong_password(self):
+        self.assertFalse(User.authenticate("testuser3", "incorrect"))
