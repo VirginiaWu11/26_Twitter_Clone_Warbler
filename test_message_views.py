@@ -101,3 +101,18 @@ class MessageViewTestCase(TestCase):
             # "Access unauthorized" flashed to the user
             self.assertIn("Access unauthorized", str(resp.data))
 
+    def test_delete_message_no_session(self):
+        """When you’re logged out, can you delete a message as yourself?"""
+        with self.client as c:
+            m = Message(
+                text="Hello",
+                user_id=self.testuser.id
+            )
+            db.session.add(m)
+            db.session.commit()
+            resp=c.post('/messages/1/delete',follow_redirects=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized", str(resp.data))
+
+            m = Message.query.get(1)
+            self.assertEqual(m.text,"Hello")
