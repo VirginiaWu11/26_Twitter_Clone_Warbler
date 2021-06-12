@@ -136,6 +136,7 @@ class MessageViewTestCase(TestCase):
         db.session.add_all([u, m])
         db.session.commit()
 
+
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = 5
@@ -146,3 +147,5 @@ class MessageViewTestCase(TestCase):
 
             m = Message.query.get(1234)
             self.assertIsNotNone(m)
+            self.assertEqual(m.text,"a test message")
+            
