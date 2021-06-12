@@ -103,4 +103,23 @@ class MessageViewTestCase(TestCase):
             self.assertIn("testuser3",str(resp.data))
             self.assertIn("testuser4",str(resp.data))
 
+    def test_users_profile(self):
+        """/users/<int:user_id> should show profile and comments of current user"""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1.id
+            m = Message(
+                text="Hello Test",
+                user_id=self.u1.id
+            )
+            db.session.add(m)
+            db.session.commit()
+
+            resp = c.get(f"/users/{self.u1.id}")
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("testuser1",str(resp.data))
+            self.assertIn("Hello Test",str(resp.data))
+          
+    
 
