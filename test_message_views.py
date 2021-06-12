@@ -116,3 +116,33 @@ class MessageViewTestCase(TestCase):
 
             m = Message.query.get(1)
             self.assertEqual(m.text,"Hello")
+    
+    def test_unauthorized_message_delete(self):
+        """When you’re logged in, are you prohibiting from deleting a message as another user?"""
+
+        # A second user that will try to delete the message
+        u = User.signup(username="unauthorized-user",
+                        email="testtest@test.com",
+                        password="password",
+                        image_url=None)
+        u.id = 5
+
+        #Message is owned by testuser
+        m = Message(
+            id=1234,
+            text="a test message",
+            user_id=self.testuser.id
+        )
+        db.session.add_all([u, m])
+        db.session.commit()
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = 5
+
+            resp = c.post("/messages/1234/delete", follow_redirects=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized", str(resp.data))
+
+            m = Message.query.get(1234)
+            self.assertIsNotNone(m)
