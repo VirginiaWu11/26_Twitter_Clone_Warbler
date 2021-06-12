@@ -8,6 +8,8 @@
 
 import os
 from unittest import TestCase
+from sqlalchemy import exc
+
 
 from models import db, User, Message, Follows
 
@@ -40,7 +42,31 @@ class UserModelTestCase(TestCase):
         Message.query.delete()
         Follows.query.delete()
 
+        u1 = User(
+            email="test1@test.com",
+            username="testuser1",
+            password="HASHED_PASSWORD"
+        )
+        u2 = User(
+            email="test2@test.com",
+            username="testuser2",
+            password="HASHED_PASSWORD"
+        )
+        u1.following.append(u2)
+        db.session.add_all([u1,u2])
+        db.session.commit()
+
+        
+        self.u1 = User.query.get(1)
+        self.u2= User.query.get(2)
         self.client = app.test_client()
+        # import pdb; pdb.set_trace()
+
+    def tearDown(self):
+        # res = super().tearDown() # not needed
+        db.session.rollback()
+        # return res
+
 
     def test_user_model(self):
         """Does basic model work?"""
@@ -58,6 +84,43 @@ class UserModelTestCase(TestCase):
         self.assertEqual(len(u.messages), 0)
         self.assertEqual(len(u.followers), 0)
         # test repr method
-        self.assertEqual(str(u), "<User #1: testuser, test@test.com>")
+        self.assertEqual(str(u), "<User #3: testuser, test@test.com>")
 
-   
+    def test_is_following(self):
+        """Test user function is_following"""
+        self.assertEqual(self.u1.is_following(self.u2),True)
+        self.assertEqual(self.u2.is_following(self.u1),False)
+        
+    
+    def test_is_followed_by(self):
+        """Test user function is_followed_by"""
+        self.assertEqual(self.u2.is_followed_by(self.u1),True)
+        self.assertEqual(self.u1.is_followed_by(self.u2),False)
+
+    def test_valid_user_signup(self):
+        """Test user method signup"""
+        u4=User.signup("testuser4","test4@test.com","HASHED_PASSWORD4",None)
+        db.session.commit()
+        u4 = User.query.get(u4.id)
+        self.assertIsNotNone(u4)
+        self.assertEqual(u4.id,3)
+        self.assertEqual(u4.username,"testuser4")
+        
+        self.assertNotEqual(u4.password,"HASHED_PASSWORD4")
+    
+    def test_invalid_username_signup(self):
+        u_inv=User.signup("testuser1","test4@test.com","HASHED_PASSWORD4",None)
+        with self.assertRaises(exc.IntegrityError) as context:
+            db.session.commit()
+            
+    def test_invalid_email_signup(self):
+        u_inv=User.signup("testuser5","test1@test.com","HASHED_PASSWORD4",None)
+        with self.assertRaises(exc.IntegrityError) as context:
+            db.session.commit()
+
+    def test_invalid_password_signup(self):
+        with self.assertRaises(ValueError) as context:
+            User.signup("testuser5", "test5@test.com", "", None)
+        
+        with self.assertRaises(ValueError) as context:
+            User.signup("testuser5", "test5@test.com", None, None)
