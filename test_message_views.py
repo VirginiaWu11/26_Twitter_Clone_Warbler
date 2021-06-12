@@ -80,15 +80,17 @@ class MessageViewTestCase(TestCase):
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.testuser.id
-        m = Message(
-            text="Hello",
-            user_id=self.testuser.id
-        )
-        db.session.add(m)
-        db.session.commit()
-        resp=c.post('/messages/1/delete',follow_redirects=True)
-        # import pdb; pdb.set_trace()
-        self.assertEqual(resp.status_code, 200)
+            m = Message(
+                text="Hello",
+                user_id=self.testuser.id
+            )
+            db.session.add(m)
+            db.session.commit()
+            resp=c.post('/messages/1/delete',follow_redirects=True)
+            self.assertEqual(resp.status_code, 200)
+
+            m = Message.query.get(1)
+            self.assertIsNone(m)
 
     def test_add_message_no_session(self):
         """When you’re logged out, are you prohibited from adding messages?"""
@@ -98,3 +100,4 @@ class MessageViewTestCase(TestCase):
             self.assertEqual(resp.status_code, 200)
             # "Access unauthorized" flashed to the user
             self.assertIn("Access unauthorized", str(resp.data))
+
