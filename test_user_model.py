@@ -64,7 +64,6 @@ class UserModelTestCase(TestCase):
         self.u1_id=self.u1.id
         self.u2= User.query.get(2)
         self.client = app.test_client()
-        # import pdb; pdb.set_trace()
 
     def tearDown(self):
         # res = super().tearDown() # not needed

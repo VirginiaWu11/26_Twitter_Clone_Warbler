@@ -96,7 +96,6 @@ class MessageViewTestCase(TestCase):
         """When you’re logged out, are you prohibited from adding messages?"""
         with self.client as c:
             resp = c.post("/messages/new", data={"text": "Hello"}, follow_redirects=True)
-            # import pdb; pdb.set_trace()
             self.assertEqual(resp.status_code, 200)
             # "Access unauthorized" flashed to the user
             self.assertIn("Access unauthorized", str(resp.data))
