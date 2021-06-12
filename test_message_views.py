@@ -38,6 +38,9 @@ class MessageViewTestCase(TestCase):
 
     def setUp(self):
         """Create test client, add sample data."""
+         
+        db.drop_all()
+        db.create_all()
 
         User.query.delete()
         Message.query.delete()
@@ -72,7 +75,22 @@ class MessageViewTestCase(TestCase):
             msg = Message.query.one()
             self.assertEqual(msg.text, "Hello")
 
-    def test_add_no_session(self):
+    def test_delete_message(self):
+        """When you’re logged in, can you delete a message as yourself?"""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+        m = Message(
+            text="Hello",
+            user_id=self.testuser.id
+        )
+        db.session.add(m)
+        db.session.commit()
+        resp=c.post('/messages/1/delete',follow_redirects=True)
+        # import pdb; pdb.set_trace()
+        self.assertEqual(resp.status_code, 200)
+
+    def test_add_message_no_session(self):
         """When you’re logged out, are you prohibited from adding messages?"""
         with self.client as c:
             resp = c.post("/messages/new", data={"text": "Hello"}, follow_redirects=True)
