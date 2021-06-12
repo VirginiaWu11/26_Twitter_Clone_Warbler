@@ -77,3 +77,30 @@ class MessageViewTestCase(TestCase):
             self.assertNotIn("testuser4",str(resp.data))
             #logged-in user
             self.assertIn("testuser2",str(resp.data))
+
+    def test_users(self):
+        """/users should show all users"""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1.id
+
+            resp = c.get("/users")
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("testuser1",str(resp.data))
+            self.assertIn("testuser2",str(resp.data))
+            self.assertIn("testuser3",str(resp.data))
+            self.assertIn("testuser4",str(resp.data))
+
+
+    def test_users_logged_out(self):
+        """/users should show all users"""
+        with self.client as c:
+
+            resp = c.get("/users")
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("testuser1",str(resp.data))
+            self.assertIn("testuser2",str(resp.data))
+            self.assertIn("testuser3",str(resp.data))
+            self.assertIn("testuser4",str(resp.data))
+
+
