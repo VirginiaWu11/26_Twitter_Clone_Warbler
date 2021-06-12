@@ -5,7 +5,6 @@ from unittest import TestCase
 
 from models import db, connect_db, Message, User, Likes, Follows
 
-
 os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
 
 from app import app, CURR_USER_KEY
@@ -28,22 +27,25 @@ class MessageViewTestCase(TestCase):
         u1 = User.signup(
             email="test1@test.com",
             username="testuser1",
-            password="HASHED_PASSWORD"
+            password="HASHED_PASSWORD",image_url=None
         )
         
         u2 = User.signup(
             email="test2@test.com",
             username="testuser2",
-            password="HASHED_PASSWORD"
+            password="HASHED_PASSWORD",image_url=None
         )
 
         u1.following.append(u2)
+        
         db.session.add_all([u1,u2])
         db.session.commit()
 
         u3=User.signup("testuser3","test3@test.com","HASHED_PASSWORD3",None)
+        u4=User.signup("testuser4","test4@test.com","HASHED_PASSWORD4",None)
+        u1.following.append(u3)
+
         db.session.commit()
-        
         self.u1 = User.query.get(1)
         self.u1_id=self.u1.id
         self.u2= User.query.get(2)
@@ -51,3 +53,27 @@ class MessageViewTestCase(TestCase):
 
     def tearDown(self):
         db.session.rollback()
+
+    def test_following_any_user(self):
+        """When you’re logged in, can you see the following pages for any user?"""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u2.id
+
+            resp = c.get("/users/1/following")
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("testuser2",str(resp.data))
+            self.assertIn("testuser3",str(resp.data))
+
+    def test_follower_any_user(self):
+        """When you’re logged in, can you see the follower pages for any user?"""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u2.id
+
+            resp = c.get("/users/3/followers")
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("testuser1",str(resp.data))
+            self.assertNotIn("testuser4",str(resp.data))
+            #logged-in user
+            self.assertIn("testuser2",str(resp.data))
