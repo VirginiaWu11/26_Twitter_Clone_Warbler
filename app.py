@@ -1,5 +1,6 @@
 import os
 
+from functools import wraps
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
@@ -27,7 +28,14 @@ connect_db(app)
 
 ##############################################################################
 # User signup/login/logout
-
+def login_required(func):
+    @wraps(func)
+    def wrapper(*args,**kwargs):
+        if not g.user:
+            flash("Access unauthorized.", "danger")
+            return redirect("/")
+        func(*args,**kwargs)
+    return wrapper
 
 @app.before_request
 def add_user_to_g():
@@ -85,8 +93,8 @@ def signup():
 
         return redirect("/")
 
-    else:
-        return render_template('users/signup.html', form=form)
+    
+    return render_template('users/signup.html', form=form)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -155,24 +163,19 @@ def users_show(user_id):
 
 
 @app.route('/users/<int:user_id>/following')
+@login_required
 def show_following(user_id):
     """Show list of people this user is following."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     user = User.query.get_or_404(user_id)
     return render_template('users/following.html', user=user)
 
 
 @app.route('/users/<int:user_id>/followers')
+@login_required
 def users_followers(user_id):
     """Show list of followers of this user."""
 
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     user = User.query.get_or_404(user_id)
     return render_template('users/followers.html', user=user)
