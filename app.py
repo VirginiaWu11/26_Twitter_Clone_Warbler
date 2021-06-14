@@ -34,7 +34,7 @@ def login_required(func):
         if not g.user:
             flash("Access unauthorized.", "danger")
             return redirect("/")
-        func(*args,**kwargs)
+        return func(*args,**kwargs)
     return wrapper
 
 @app.before_request
@@ -182,12 +182,9 @@ def users_followers(user_id):
 
 
 @app.route('/users/follow/<int:follow_id>', methods=['POST'])
+@login_required
 def add_follow(follow_id):
     """Add a follow for the currently-logged-in user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     followed_user = User.query.get_or_404(follow_id)
     g.user.following.append(followed_user)
@@ -197,12 +194,9 @@ def add_follow(follow_id):
 
 
 @app.route('/users/stop-following/<int:follow_id>', methods=['POST'])
+@login_required
 def stop_following(follow_id):
     """Have currently-logged-in-user stop following this user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     followed_user = User.query.get(follow_id)
     g.user.following.remove(followed_user)
@@ -212,11 +206,9 @@ def stop_following(follow_id):
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
+@login_required
 def profile():
     """Update profile for current user."""
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     form = UserEditForm(obj=g.user)
     if form.validate_on_submit():
@@ -244,12 +236,9 @@ def profile():
 
 
 @app.route('/users/delete', methods=["POST"])
+@login_required
 def delete_user():
     """Delete user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     do_logout()
 
@@ -259,12 +248,9 @@ def delete_user():
     return redirect("/signup")
 
 @app.route('/users/add_like/<int:msg_id>', methods=["POST"])
+@login_required
 def add_like(msg_id):
     """Add like"""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     if msg_id not in [msg.id for msg in g.user.likes]:
         new_like = Likes(user_id=g.user.id, message_id=msg_id)
@@ -278,12 +264,9 @@ def add_like(msg_id):
     return redirect("/")
 
 @app.route('/users/<int:user_id>/likes')
+@login_required
 def show_likes(user_id):
     """Add like"""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     user = User.query.get_or_404(user_id)
 
@@ -304,15 +287,12 @@ def show_likes(user_id):
 # Messages routes:
 
 @app.route('/messages/new', methods=["GET", "POST"])
+@login_required
 def messages_add():
     """Add a message:
 
     Show form if GET. If valid, update message and redirect to user page.
     """
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     form = MessageForm()
 
@@ -335,12 +315,9 @@ def messages_show(message_id):
 
 
 @app.route('/messages/<int:message_id>/delete', methods=["POST"])
+@login_required
 def messages_destroy(message_id):
     """Delete a message."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
     if msg.user_id != g.user.id:
